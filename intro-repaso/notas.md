@@ -22,3 +22,7 @@
     + ENTIDAD | INSTANCIA
     + Person  | John Smith
     + Product | Unia
+# Relación
++ Si la linea es continua la relación es obligatoria -depende de donde sale-
++ Si la linea es discotinua la relación es opcional -no dependo de x-
+ ![figura](figura1.png)
