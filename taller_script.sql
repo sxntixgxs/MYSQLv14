@@ -45,10 +45,12 @@
     CREATE TABLE IF NOT EXISTS oficina(
         codigo_oficina VARCHAR(10) PRIMARY KEY,
         zip_code VARCHAR(10) NOT NULL,
+        idCiudad INT NOT NULL,
         telefono VARCHAR(20) NOT NULL,
         linea_direccion1 VARCHAR(50) NOT NULL,
         linea_direccion2 VARCHAR(50),
-        FOREIGN KEY (zip_code) REFERENCES codigo_postal(zip_code)
+        FOREIGN KEY (zip_code) REFERENCES codigo_postal(zip_code),
+        FOREIGN KEY (idCiudad) REFERENCES ciudad(idCiudad)
     );
 
     CREATE TABLE IF NOT EXISTS puesto(
