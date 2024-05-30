@@ -52,9 +52,9 @@ INSERT INTO empleado(codigo_empleado,nombre,apellido1,extensio,email,codigo_ofic
 (666,'Jone','Jones','99','jone@jones.com','1402',NULL,5),
 (1,'Pablo','Azcarate','32','pablo@azcarate.com','3302',666,4),
 (2,'Juan','Azcarate','232','juan@azcarate.com','3301',666,4),
-(3,'Pablo','Motos','12','pablo@motos.com','3302',666,2),
-(5,'Keyly','Kox','25','keyly@kox.com','3302',3,1),
-(4,'Samuel','Ramirez','15','keyly@ramirez.com','3302',3,1),
+(7,'Pablo','Motos','12','pablo@motos.com','3302',666,2),
+(5,'Keyly','Kox','25','keyly@kox.com','3302',7,1),
+(4,'Samuel','Ramirez','15','keyly@ramirez.com','3302',7,1),
 (6,'Jacobo','Kox','155','jacobo@kox.com','1401',5,NULL);
 
 -- cliente

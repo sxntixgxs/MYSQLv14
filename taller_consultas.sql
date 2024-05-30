@@ -4,15 +4,13 @@
 
 SELECT O.codigo_oficina AS CodOficina, C.nombre AS Ciudad
 FROM oficina O
-INNER JOIN codigo_postal CP ON C.idCiudad = CP.zip_code
-INNER JOIN ciudad C ON CP.idCiudad = C.id;
+INNER JOIN ciudad C ON O.idCiudad = C.idCiudad;
 
 -- Devuelve un listado con la ciudad y el teléfono de las oficinas de España.
 
 SELECT C.nombre AS Ciudad, O.telefono As Telefono
 FROM oficina O
-INNER JOIN codigo_postal CP ON C.idCiudad = CP.zip_code
-INNER JOIN ciudad C ON CP.idCiudad = C.id
+INNER JOIN ciudad C ON O.idCiudad = C.idCiudad
 INNER JOIN pais P ON C.idPais = P.idPais
 WHERE P.nombre LIKE 'Esp%';
 
@@ -29,7 +27,7 @@ WHERE E.codigo_jefe = 7;
 
 SELECT CONCAT(nombre,apellido1) AS Nombre, email AS Email 
 FROM empleado
-WHERE codigo_jefe = NULL;
+WHERE codigo_jefe IS NULL;
 
 -- 5. Devuelve un listado con el nombre, apellidos y puesto de aquellos
 -- empleados que no sean representantes de ventas.
