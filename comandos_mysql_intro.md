@@ -12,7 +12,7 @@
 + MySQL está configurado no como una app sino como un servicio
 # Cómo acceder y usar MYSQL desde su terminal
 1. Verificar que esté en ejecución desde servicios del sistema
-1. mysql -p -u root y de esta forma pide la contraseña con -p. Sin embargo, en campus en vez de acceder con -u root accede con -u campus2023 y la -p también es campus2023
+1. **mysql -p -u root** y de esta forma pide la contraseña con -p. Sin embargo, en campus en vez de acceder con -u root accede con -u campus2023 y la -p también es campus2023
 
 + Es recomendado tener un bloc de notas abierto para poder "equivocarse" al enviar bastante info, por ejemplo en la creación de tablas ya que en la consola no es muy facil editar la información
 

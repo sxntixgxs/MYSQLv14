@@ -44,7 +44,7 @@
 
     CREATE TABLE IF NOT EXISTS oficina(
         codigo_oficina VARCHAR(10) PRIMARY KEY,
-        zip_code VARCHAR(10) NOT NULL,
+        zip_code VARCHAR(10),
         idCiudad INT NOT NULL,
         telefono VARCHAR(20) NOT NULL,
         linea_direccion1 VARCHAR(50) NOT NULL,
@@ -63,7 +63,7 @@
         nombre VARCHAR(50) NOT NULL,
         apellido1 VARCHAR(50) NOT NULL,
         apellido2 VARCHAR(50),
-        extension VARCHAR(10) NOT NULL,
+        extensio VARCHAR(10) NOT NULL,
         email VARCHAR(100) NOT NULL,
         codigo_oficina VARCHAR(10) NOT NULL,
         codigo_jefe INT,
@@ -132,7 +132,7 @@
         fecha_entrega DATE,
         idEstado INT NOT NULL,
         comentarios TEXT,
-        codigo_cliente INT,
+        codigo_cliente INT NOT NULL,
         FOREIGN KEY (idEstado) REFERENCES estado(id),
         FOREIGN KEY (codigo_cliente) REFERENCES cliente(codigo_cliente)
     );
