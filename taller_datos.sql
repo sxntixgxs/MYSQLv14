@@ -55,12 +55,13 @@ INSERT INTO empleado(codigo_empleado,nombre,apellido1,extensio,email,codigo_ofic
 (7,'Pablo','Motos','12','pablo@motos.com','3302',666,2),
 (5,'Keyly','Kox','25','keyly@kox.com','3302',7,1),
 (4,'Samuel','Ramirez','15','keyly@ramirez.com','3302',7,1),
-(6,'Jacobo','Kox','155','jacobo@kox.com','1401',5,NULL);
+(6,'Jacobo','Kox','155','jacobo@kox.com','1401',5,NULL),
+(11,'Keyly','Valenzuela','25','keyly@valen.com','2402',7,1);
 
 -- cliente
 INSERT INTO cliente(codigo_cliente, nombre_cliente, telefono, fax, linea_direccion1, idCiudad, codigo_empleado_rep_ventas) VALUES
 
-(1, 'Carlos Fernández', '555-5678', '555-5678', 'Calle de Alcala 3', 1, 5),
+(1, 'Carlos Fernández', '555-5678', '555-5678', 'Calle de Alcala 3', 1, 11),
 (2, 'Ana Martínez', '555-8765', '555-8765', 'Calle de Leganes 13', 2, 4),
 (3, 'Pedro López', '555-4321', '555-4321', '299 Park Ave', 3, NULL),
 (4, 'Lucía García', '555-1235', '555-1235', 'Calle de Alcala 34', 1, NULL),
@@ -76,7 +77,7 @@ INSERT INTO cliente(codigo_cliente, nombre_cliente, telefono, fax, linea_direcci
 
 -- producto
 INSERT INTO producto(codigo_producto, nombre, gama, dimensiones, idProveedor, descripcion, cantidad_en_stock, precio_venta, precio_proveedor) VALUES
-('P001', 'Maceta Ornamental', 'Ornamentales', '30x30', 2, 'Maceta decorativa para jardín', 100, 15.00, 10.00),
+('P001', 'Maceta Ornamental', 'Ornamentales', '30x30', 2, 'Maceta decorativa para jardín', 102, 15.00, 10.00),
 ('P002', 'Manzana', 'Frutales', '8x10', 1, 'Manzana roja fresca', 200, 0.50, 0.30),
 ('P003', 'Naranja', 'Frutales', NULL, 1, 'Naranja jugosa', 150, 0.70, 0.40);
 
@@ -113,7 +114,8 @@ INSERT INTO pedido(codigo_pedido, fecha_pedido, fecha_esperada,fecha_entrega, id
 (6, '2009-02-20','2010-02-22','2010-02-25',1,11),
 (7, '2010-01-02','2010-01-07',NULL,2,11),
 (8, '2010-02-12','2010-02-15',NULL,2,11),
-(9, '2010-02-20','2010-02-22','2010-02-25',1,11);
+(9, '2010-02-20','2010-02-22','2010-02-25',1,11),
+(10,'2008-01-03','2008-01-09','2008-01-07',1,1);
 -- detalle_pedido
 INSERT INTO detalle_pedido(codigo_pedido, codigo_producto, cantidad, precio_unidad,numero_linea) VALUES
 (1, 'P001', 2, 30.00,6),
@@ -141,4 +143,5 @@ INSERT INTO detalle_pedido(codigo_pedido, codigo_producto, cantidad, precio_unid
 (8, 'P003', 10, 7.00,4),
 (9, 'P001', 2, 30.00,6),
 (9, 'P002', 5, 2.50,5),
-(9, 'P003', 10, 7.00,4);
+(9, 'P003', 10, 7.00,4),
+(10,'P001',4,30.00,6);

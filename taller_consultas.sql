@@ -80,7 +80,7 @@ GROUP BY codigo_cliente;
 
 SELECT codigo_pedido, codigo_cliente, fecha_esperada, fecha_entrega
 FROM pedido
-WHERE DATEDIFF(fecha_entrega_,fecha_esperada)>1;
+WHERE DATEDIFF(fecha_entrega,fecha_esperada)>1;
 
 -- 10. Devuelve un listado con el código de pedido, código de cliente, fecha esperada y fecha de entrega de los pedidos cuya fecha de entrega ha sido al menos dos días antes de la fecha esperada.
 
@@ -102,15 +102,15 @@ WHERE E.nombre = "Rechazado" AND fecha_pedido LIKE '2009%';
 -- 12. Devuelve un listado de todos los pedidos que han sido entregados en el
 -- mes de enero de cualquier año.
 
-SELECT P.codigo_pedido AS PedidosEntregados
+SELECT P.codigo_pedido AS IDPedidosEntregados
 FROM estado E
 INNER JOIN pedido P ON E.id = P.idEstado
-WHERE E.nombre = "Entregado";
+WHERE E.nombre = "Entregado" AND MONTH(P.fecha_entrega)='01';
 
 -- 13. Devuelve un listado con todos los pagos que se realizaron en el
 -- año 2008 mediante Paypal. Ordene el resultado de mayor a menor.
 
-SELECT P.id_transaccion AS PagosPaypal
+SELECT P.id_transaccion AS PagosPaypal, P.total AS Total
 FROM forma_pago FP
 INNER JOIN pago P ON FP.id = P.idFormaPago
 WHERE FP.nombre = "Paypal" AND P.fecha_pago LIKE '2008%'
@@ -131,7 +131,7 @@ FROM forma_pago;
 SELECT P.nombre AS ProductoOrnamental
 FROM gama_producto AS GP
 INNER JOIN producto AS P ON GP.gama = P.gama
-WHERE P.cantidad_en_stock > 100 AND GP.nombre = "Ornamentales"
+WHERE P.cantidad_en_stock > 100 AND GP.gama = "Ornamentales"
 ORDER BY P.precio_venta DESC;
 
 -- 16. Devuelve un listado con todos los clientes que sean de la ciudad de Madrid y
@@ -148,15 +148,14 @@ WHERE (E.codigo_empleado = 11 OR E.codigo_empleado = 30) AND CD.nombre = 'Madrid
 
 -- 1. Obtén un listado con el nombre de cada cliente y el nombre y apellido de su
 -- representante de ventas.
-
-SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre,E.apellido1) AS RepVentas
+SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre," ",E.apellido1) AS RepVentas
 FROM empleado AS E
 INNER JOIN cliente AS C ON E.codigo_empleado = C.codigo_empleado_rep_ventas;
 
 -- 2. Muestra el nombre de los clientes que hayan realizado pagos junto con el
 -- nombre de sus representantes de ventas.
 
-SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre,E.apellido1) AS RepVentas
+SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre," ",E.apellido1) AS RepVentas
 FROM empleado AS E
 INNER JOIN cliente AS C ON E.codigo_empleado = C.codigo_empleado_rep_ventas
 INNER JOIN pago AS P ON C.codigo_cliente = P.codigo_cliente;
@@ -165,7 +164,7 @@ INNER JOIN pago AS P ON C.codigo_cliente = P.codigo_cliente;
 -- el nombre de sus representantes de ventas.   
 
 
-SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre,E.apellido1) AS RepVentas
+SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre,' ',E.apellido1) AS RepVentas
 FROM empleado AS E
 INNER JOIN cliente AS C ON E.codigo_empleado = C.codigo_empleado_rep_ventas
 WHERE C.codigo_cliente NOT IN (SELECT codigo_cliente FROM pago);
@@ -173,7 +172,7 @@ WHERE C.codigo_cliente NOT IN (SELECT codigo_cliente FROM pago);
 -- 4. Devuelve el nombre de los clientes que han hecho pagos y el nombre de sus
 -- representantes junto con la ciudad de la oficina a la que pertenece el
 -- representante.
-SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre,E.apellido1) AS RepVentas, CD.nombre 
+SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre,' ',E.apellido1) AS RepVentas, CD.nombre 
 FROM empleado AS E
 INNER JOIN cliente AS C ON E.codigo_empleado = C.codigo_empleado_rep_ventas
 INNER JOIN pago AS P ON C.codigo_cliente = P.codigo_cliente
@@ -184,7 +183,8 @@ INNER JOIN ciudad AS CD ON O.idCiudad = CD.idCiudad;
 -- de sus representantes junto con la ciudad de la oficina a la que pertenece el
 -- representante.
 
-SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre,E.apellido1) AS RepVentas, CD.nombre 
+
+SELECT C.nombre_cliente AS Cliente, CONCAT(E.nombre,' ',E.apellido1) AS RepVentas, CD.nombre 
 FROM empleado AS E
 INNER JOIN cliente AS C ON E.codigo_empleado = C.codigo_empleado_rep_ventas
 INNER JOIN oficina AS O ON E.codigo_oficina = O.codigo_oficina
@@ -220,7 +220,7 @@ INNER JOIN empleado AS J ON E.codigo_jefe = J.codigo_empleado;
 -- 9. Devuelve un listado que muestre el nombre de cada empleados, el nombre
 -- de su jefe y el nombre del jefe de sus jefe.
 
-SELECT CONCAT(E.nombre,E.apellido1) AS Empleado, CONCAT(J.nombre,J.apellido1) AS Jefe, CONCAT(JJ.nombre,J.apellido1) AS JefeDeJefes
+SELECT CONCAT(E.nombre,' ',E.apellido1) AS Empleado, CONCAT(J.nombre,' ',J.apellido1) AS Jefe, CONCAT(JJ.nombre,' ',JJ.apellido1) AS JefeDeJefes
 FROM empleado AS E
 INNER JOIN empleado AS J ON E.codigo_jefe = J.codigo_empleado
 INNER JOIN empleado AS JJ ON J.codigo_jefe = JJ.codigo_empleado;
@@ -228,7 +228,7 @@ INNER JOIN empleado AS JJ ON J.codigo_jefe = JJ.codigo_empleado;
 -- 10. Devuelve el nombre de los clientes a los que no se les ha entregado a
 -- tiempo un pedido.
 
-SELECT C.nombre AS ClientePedidoTarde
+SELECT C.nombre_cliente AS ClientePedidoTarde
 FROM pedido AS P
 INNER JOIN cliente AS C ON P.codigo_cliente = C.codigo_cliente
 WHERE DATEDIFF(fecha_entrega,fecha_esperada)>1;
@@ -236,25 +236,25 @@ WHERE DATEDIFF(fecha_entrega,fecha_esperada)>1;
 -- 11. Devuelve un listado de las diferentes gamas de producto que ha comprado
 -- cada cliente.
 
-SELECT P.gama AS GamasProductoComprado
+SELECT PR.gama AS GamasProductoComprado
 FROM pedido AS P
 INNER JOIN detalle_pedido AS DP ON P.codigo_pedido = DP.codigo_pedido
-INNER JOIN producto AS P ON DP.codigo_producto = P.codigo_producto;
+INNER JOIN producto AS PR ON DP.codigo_producto = PR.codigo_producto
+GROUP BY PR.gama;
 
 -- ## Consultas multitabla (Composición externa) ##
-
 -- 1. Devuelve un listado que muestre solamente los clientes que no han
 -- realizado ningún pago.
 
 SELECT C.nombre_cliente
 FROM cliente AS C
-WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pago)
+WHERE C.codigo_cliente NOT IN(SELECT codigo_cliente FROM pago);
 -- 2. Devuelve un listado que muestre solamente los clientes que no han
 -- realizado ningún pedido.
 
 SELECT C.nombre_cliente
 FROM cliente AS C
-WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pedido)
+WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pedido);
 
 -- 3. Devuelve un listado que muestre los clientes que no han realizado ningún
 -- pago y los que no han realizado ningún pedido.
@@ -265,7 +265,7 @@ WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pago)
 UNION
 SELECT C.nombre_cliente
 FROM cliente AS C
-WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pedido)
+WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pedido);
 
 -- 4. Devuelve un listado que muestre solamente los empleados que no tienen
 -- una oficina asociada.
