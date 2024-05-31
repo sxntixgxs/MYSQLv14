@@ -261,11 +261,11 @@ WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pedido);
 
 SELECT C.nombre_cliente
 FROM cliente AS C
-WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pago)
+WHERE C.codigo_cliente NOT IN (SELECT codigo_cliente FROM pago)
 UNION
 SELECT C.nombre_cliente
 FROM cliente AS C
-WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pedido);
+WHERE C.codigo_cliente NOT IN (SELECT codigo_cliente FROM pedido);
 
 -- 4. Devuelve un listado que muestre solamente los empleados que no tienen
 -- una oficina asociada.
@@ -279,31 +279,39 @@ WHERE codigo_oficina IS NULL;
 -- 5. Devuelve un listado que muestre solamente los empleados que no tienen un
 -- cliente asociado.
 
-SELECT CONCAT(E.nombre,E.apellido1) AS EmpleadoSinCliente
-FROM empleado AS E
-WHERE E.codigo_empleado NOT IN (SELECT codigo_empleado_rep_ventas FROM cliente);
+SELECT codigo_empleado
+FROM empleado
+WHERE codigo_empleado NOT IN(SELECT E.codigo_empleado
+FROM cliente C 
+INNER JOIN empleado E ON C.codigo_empleado_rep_ventas = E.codigo_empleado
+GROUP BY E.codigo_empleado);
 
 
 -- 6. Devuelve un listado que muestre solamente los empleados que no tienen un
 -- cliente asociado junto con los datos de la oficina donde trabajan.
 
-SELECT CONCAT(E.nombre,E.apellido1) AS EmpleadoSinCliente, C.nombre AS CiudadEmpleado
+SELECT CONCAT(E.nombre,' ',E.apellido1) AS Empleado, C.nombre AS OficinaCiudad, O.linea_direccion1 AS DireccionOficina
 FROM empleado AS E
 INNER JOIN oficina AS O ON E.codigo_oficina = O.codigo_oficina
 INNER JOIN ciudad AS C ON O.idCiudad = C.idCiudad
-WHERE E.codigo_empleado NOT IN (SELECT codigo_empleado_rep_ventas FROM cliente);
+WHERE codigo_empleado NOT IN(SELECT E.codigo_empleado
+FROM cliente C 
+INNER JOIN empleado E ON C.codigo_empleado_rep_ventas = E.codigo_empleado
+GROUP BY E.codigo_empleado);
 
 
 -- 7. Devuelve un listado que muestre los empleados que no tienen una oficina
 -- asociada y los que no tienen un cliente asociado.
-
-SELECT nombre, apellido1
+SELECT CONCAT(nombre,' ',apellido1)
 FROM empleado
-WHERE codigo_oficina IS NULL
-UNION
-SELECT CONCAT(E.nombre,E.apellido1) AS EmpleadoSinCliente
-FROM empleado AS E
-WHERE E.codigo_empleado NOT IN (SELECT codigo_empleado_rep_ventas FROM cliente);
+WHERE codigo_empleado NOT IN(SELECT E.codigo_empleado
+FROM cliente C 
+INNER JOIN empleado E ON C.codigo_empleado_rep_ventas = E.codigo_empleado
+GROUP BY E.codigo_empleado)
+UNION 
+SELECT CONCAT(nombre,' ',apellido1)
+FROM empleado
+WHERE codigo_oficina IS NULL ;
 
 
 -- 8. Devuelve un listado de los productos que nunca han aparecido en un
@@ -328,7 +336,7 @@ WHERE P.codigo_producto NOT IN (SELECT codigo_producto FROM detalle_pedido);
 -- hayan sido los representantes de ventas de algún cliente que haya realizado
 -- la compra de algún producto de la gama Frutales.
 
-SELECT O.nombre
+SELECT O.linea_direccion1
 FROM empleado AS E
 INNER JOIN oficina AS O ON E.codigo_oficina = O.codigo_oficina
 WHERE E.codigo_empleado NOT IN 
@@ -337,7 +345,8 @@ FROM detalle_pedido AS DP
 INNER JOIN pedido AS P ON DP.codigo_pedido = P.codigo_pedido
 INNER JOIN producto AS PR ON DP.codigo_producto = PR.codigo_producto
 INNER JOIN cliente AS CL ON P.codigo_cliente = CL.codigo_cliente
-WHERE PR.gama = 'Frutales');
+WHERE PR.gama = 'Frutales')
+GROUP BY O.codigo_oficina;
 
 -- 11. Devuelve un listado con los clientes que han realizado algún pedido pero no
 -- han realizado ningún pago.
@@ -351,42 +360,109 @@ WHERE C.codigo_cliente NOT IN (SELECT codigo_cliente FROM pago);
 -- 12. Devuelve un listado con los datos de los empleados que no tienen clientes
 -- asociados y el nombre de su jefe asociado.
 
-SELECT CONCAT(E.nombre,E.apellido1) AS EmpleadoSinCl, CONCAT(J.nombre,J.apellido1) AS Jefe
+SELECT CONCAT(E.nombre,' ',E.apellido1) AS EmpleadoSinCliente, CONCAT(J.nombre,' ',J.apellido1)
 FROM empleado AS E
 INNER JOIN empleado AS J ON E.codigo_jefe = J.codigo_empleado
-WHERE E.codigo_empleado NOT IN (SELECT codigo_empleado_rep_ventas FROM cliente);
+WHERE E.codigo_empleado NOT IN
+(SELECT E1.codigo_empleado
+        FROM cliente C 
+            INNER JOIN empleado E1 ON C.codigo_empleado_rep_ventas = E1.codigo_empleado
+            GROUP BY E1.codigo_empleado);
 
 -- ##Consultas resumen##
 
 -- 1. ¿Cuántos empleados hay en la compañía?
-
-SELECT COUNT(codigo_empleado)
+SELECT COUNT(codigo_empleado) AS Empleados
 FROM empleado;
 
 -- 2. ¿Cuántos clientes tiene cada país?
+
+SELECT COUNT(C.codigo_cliente) AS NumClientes, P.nombre AS Pais
+FROM pais P 
+INNER JOIN ciudad CD ON P.idPais = CD.idPais
+INNER JOIN cliente C ON CD.idCiudad = C.idCiudad
+GROUP BY P.idPais;
+
 -- 3. ¿Cuál fue el pago medio en 2009?
+
+SELECT AVG(total) AS MediaPago
+FROM pago WHERE fecha_pago LIKE '2009%';
+
 -- 4. ¿Cuántos pedidos hay en cada estado? Ordena el resultado de forma
 -- descendente por el número de pedidos.
+
+SELECT COUNT(P.codigo_pedido) AS CantidadPedido, E.nombre
+FROM estado E 
+INNER JOIN pedido P ON E.id = P.idEstado
+GROUP BY E.id
+ORDER BY COUNT(P.codigo_pedido) DESC;
 -- 5. Calcula el precio de venta del producto más caro y más barato en una
 -- misma consulta.
+SELECT MIN(precio_venta) AS Barato, MAX(precio_venta) AS Caro
+FROM producto;
 -- 6. Calcula el número de clientes que tiene la empresa.
+
+SELECT COUNT(codigo_cliente) AS NumClientes FROM cliente;
+
+
 -- 7. ¿Cuántos clientes existen con domicilio en la ciudad de Madrid?
+
+SELECT COUNT(C.codigo_cliente) AS NumClientes FROM cliente C
+INNER JOIN ciudad AS CD ON C.idCiudad = CD.idCiudad
+WHERE CD.nombre = "Madrid";
+
 -- 8. ¿Calcula cuántos clientes tiene cada una de las ciudades que empiezan
 -- por M?
+SELECT COUNT(C.codigo_cliente) AS NumClientes, CD.nombre
+FROM cliente C
+INNER JOIN ciudad AS CD ON C.idCiudad = CD.idCiudad
+WHERE CD.nombre LIKE "M%"
+GROUP BY CD.idCiudad;
+
 -- 9. Devuelve el nombre de los representantes de ventas y el número de clientes
 -- al que atiende cada uno.
+
+SELECT CONCAT(E.nombre,' ',E.apellido1) AS RepVenta, COUNT(C.codigo_cliente) AS NumClientes
+FROM cliente C
+INNER JOIN empleado AS E ON C.codigo_empleado_rep_ventas = E.codigo_empleado
+GROUP BY E.codigo_empleado;
+
 -- 10. Calcula el número de clientes que no tiene asignado representante de
 -- ventas.
+SELECT COUNT(codigo_cliente) AS NumClSinRep
+FROM cliente
+WHERE codigo_empleado_rep_ventas IS NULL;
+
 -- 11. Calcula la fecha del primer y último pago realizado por cada uno de los
 -- clientes. El listado deberá mostrar el nombre y los apellidos de cada cliente.
-
+SELECT MIN(P.fecha_pago) AS PrimerPago, MAX(P.fecha_pago) AS UltimoPago, C.nombre_cliente
+FROM pago P
+INNER JOIN cliente C ON P.codigo_cliente = C.codigo_cliente
+GROUP BY C.codigo_cliente
+;
 -- 12. Calcula el número de productos diferentes que hay en cada uno de los
 -- pedidos.
+
+SELECT COUNT(DISTINCT PR.codigo_producto) AS DifProductos, P.codigo_pedido
+FROM producto AS PR
+INNER JOIN detalle_pedido P ON PR.codigo_producto = P.codigo_producto
+GROUP BY P.codigo_pedido;
+
 -- 13. Calcula la suma de la cantidad total de todos los productos que aparecen en
 -- cada uno de los pedidos.
+
+SELECT SUM(cantidad) AS TotalProductosPeiddos
+FROM detalle_pedido;
+
 -- 14. Devuelve un listado de los 20 productos más vendidos y el número total de
 -- unidades que se han vendido de cada uno. El listado deberá estar ordenado
 -- por el número total de unidades vendidas.
+SELECT P.nombre, SUM(DP.cantidad) AS UnitVendidas
+FROM detalle_pedido DP
+INNER JOIN producto P ON DP.codigo_producto = P.codigo_producto
+GROUP BY P.codigo_producto
+ORDER BY UnitVendidas LIMIT 20
+;
 -- 15. La facturación que ha tenido la empresa en toda la historia, indicando la
 -- base imponible, el IVA y el total facturado. La base imponible se calcula
 -- sumando el coste del producto por el número de unidades vendidas de la

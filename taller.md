@@ -658,17 +658,477 @@ WHERE C.codigo_cliente NOT IN(SELECT codigo_cliente FROM pedido);
 8 rows in set (0,00 sec)
 ```
 ```SQL
--- 3. Devuelve un listado que muestre los clientes que no han realizado ningún
--- pago y los que no han realizado ningún pedido.
+-- 3. Devuelve un listado que muestre los clientes que no han realizado ningún pago y los que no han realizado ningún pedido.
 
 SELECT C.nombre_cliente
 FROM cliente AS C
-WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pago)
+WHERE C.codigo_cliente NOT IN (SELECT codigo_cliente FROM pago)
 UNION
 SELECT C.nombre_cliente
 FROM cliente AS C
-WHERE C.codigo_cliente IS NOT (SELECT codigo_cliente FROM pedido);
+WHERE C.codigo_cliente NOT IN (SELECT codigo_cliente FROM pedido);
 ```
+```
++------------------+
+| nombre_cliente   |
++------------------+
+| Pedro López      |
+| Lucía García     |
+| María Sánchez    |
+| José Rodríguez   |
+| Elena Gómez      |
+| Francisco Díaz   |
+| Luis Martínez    |
+| Carmen Ruiz      |
++------------------+
+8 rows in set (0,00 sec)
+```
+```SQL
+-- 4. Devuelve un listado que muestre solamente los empleados que no tienen
+-- una oficina asociada.
+
+--Todos los empleados tienen que tener una oficina asociada pero la consulta sería así
+
+SELECT nombre, apellido1
+FROM empleado
+WHERE codigo_oficina IS NULL;
+```
+```
+Empty set (0,00 sec)
+```
+```SQL
+-- 5. Devuelve un listado que muestre solamente los empleados que no tienen un
+-- cliente asociado.
+
+SELECT CONCAT(nombre,' ',apellido1)
+FROM empleado
+WHERE codigo_empleado NOT IN(SELECT E.codigo_empleado
+FROM cliente C 
+INNER JOIN empleado E ON C.codigo_empleado_rep_ventas = E.codigo_empleado
+GROUP BY E.codigo_empleado);
+
+```
+```
++-----------------+
+| codigo_empleado |
++-----------------+
+|             666 |
+|               6 |
+|               1 |
+|               2 |
+|               7 |
++-----------------+
+5 rows in set (0,00 sec)
+```
+```SQL
+-- 6. Devuelve un listado que muestre solamente los empleados que no tienen un
+-- cliente asociado junto con los datos de la oficina donde trabajan.
+
+SELECT CONCAT(E.nombre,' ',E.apellido1) AS Empleado, C.nombre AS OficinaCiudad, O.linea_direccion1 AS DireccionOficina
+FROM empleado AS E
+INNER JOIN oficina AS O ON E.codigo_oficina = O.codigo_oficina
+INNER JOIN ciudad AS C ON O.idCiudad = C.idCiudad
+WHERE codigo_empleado NOT IN(SELECT E.codigo_empleado
+FROM cliente C 
+INNER JOIN empleado E ON C.codigo_empleado_rep_ventas = E.codigo_empleado
+GROUP BY E.codigo_empleado);
+```
+```
++----------------+---------------+-------------------+
+| Empleado       | OficinaCiudad | DireccionOficina  |
++----------------+---------------+-------------------+
+| Juan Azcarate  | Madrid        | Calle Doctores 25 |
+| Pablo Azcarate | Madrid        | Calle Doctores 23 |
+| Pablo Motos    | Madrid        | Calle Doctores 23 |
+| Jacobo Kox     | New York      | 190 Park Ave      |
+| Jone Jones     | New York      | 299 Park Ave      |
++----------------+---------------+-------------------+
+5 rows in set (0,00 sec)
+```
+```SQL
+-- 7. Devuelve un listado que muestre los empleados que no tienen una oficina
+-- asociada y los que no tienen un cliente asociado.
+
+SELECT CONCAT(nombre,' ',apellido1)
+FROM empleado
+WHERE codigo_empleado NOT IN(SELECT E.codigo_empleado
+FROM cliente C 
+INNER JOIN empleado E ON C.codigo_empleado_rep_ventas = E.codigo_empleado
+GROUP BY E.codigo_empleado)
+UNION 
+SELECT CONCAT(nombre,' ',apellido1)
+FROM empleado
+WHERE codigo_oficina IS NULL ;
+```
+```
++------------------------------+
+| CONCAT(nombre,' ',apellido1) |
++------------------------------+
+| Pablo Azcarate               |
+| Juan Azcarate                |
+| Jacobo Kox                   |
+| Pablo Motos                  |
+| Jone Jones                   |
++------------------------------+
+5 rows in set (0,00 sec)
+```
+```SQL
+-- 8. Devuelve un listado de los productos que nunca han aparecido en un
+-- pedido.
+
+SELECT nombre AS ProductosSinPedidos
+FROM producto
+WHERE codigo_producto NOT IN (SELECT P.codigo_producto FROM detalle_pedido D INNER JOIN producto P ON D.codigo_producto = P.codigo_producto GROUP BY codigo_producto); --solo hay 2 productos y tienen pedidos
+```
+```
+Empty set (0,00 sec) 
+```
+```SQL
+-- 9. Devuelve un listado de los productos que nunca han aparecido en un
+-- pedido. El resultado debe mostrar el nombre, la descripción y la imagen del
+-- producto.
+
+SELECT P.nombre AS ProductosSinPedidos, GP.imagen, P.descripcion
+FROM producto AS P
+INNER JOIN gama_producto AS GP ON P.gama = GP.gama
+WHERE P.codigo_producto NOT IN (SELECT codigo_producto FROM detalle_pedido);
+--solo hay 2 productos y tienen pedidos
+```
+```
+Empty set (0,01 sec) 
+```
+```SQL
+-- 10. Devuelve las oficinas donde no trabajan ninguno de los empleados que
+-- hayan sido los representantes de ventas de algún cliente que haya realizado
+-- la compra de algún producto de la gama Frutales.
+
+SELECT O.linea_direccion1
+FROM empleado AS E
+INNER JOIN oficina AS O ON E.codigo_oficina = O.codigo_oficina
+WHERE E.codigo_empleado NOT IN 
+(SELECT CL.codigo_empleado_rep_ventas
+FROM detalle_pedido AS DP
+INNER JOIN pedido AS P ON DP.codigo_pedido = P.codigo_pedido
+INNER JOIN producto AS PR ON DP.codigo_producto = PR.codigo_producto
+INNER JOIN cliente AS CL ON P.codigo_cliente = CL.codigo_cliente
+WHERE PR.gama = 'Frutales')
+GROUP BY O.codigo_oficina;
+```
+```
++-------------------+
+| linea_direccion1  |
++-------------------+
+| 190 Park Ave      |
+| 299 Park Ave      |
+| Calle Doctores 25 |
+| Calle Doctores 23 |
++-------------------+
+4 rows in set (0,00 sec)
+```
+```SQL
+-- 11. Devuelve un listado con los clientes que han realizado algún pedido pero no
+-- han realizado ningún pago.
+
+SELECT C.nombre_cliente
+FROM pedido AS P
+INNER JOIN cliente AS C ON P.codigo_cliente = C.codigo_cliente
+WHERE C.codigo_cliente NOT IN (SELECT codigo_cliente FROM pago); --no hay clientes que no hayan pagado
+ 
+```
+```
+Empty set (0,00 sec)
+```
+```SQL
+-- 12. Devuelve un listado con los datos de los empleados que no tienen clientes
+-- asociados y el nombre de su jefe asociado.
+
+SELECT CONCAT(E.nombre,' ',E.apellido1) AS EmpleadoSinCliente, CONCAT(J.nombre,' ',J.apellido1)
+FROM empleado AS E
+INNER JOIN empleado AS J ON E.codigo_jefe = J.codigo_empleado
+WHERE E.codigo_empleado NOT IN
+(SELECT E1.codigo_empleado
+        FROM cliente C 
+            INNER JOIN empleado E1 ON C.codigo_empleado_rep_ventas = E1.codigo_empleado
+            GROUP BY E1.codigo_empleado);
+
+```
+```
++--------------------+----------------------------------+
+| EmpleadoSinCliente | CONCAT(J.nombre,' ',J.apellido1) |
++--------------------+----------------------------------+
+| Pablo Azcarate     | Jone Jones                       |
+| Juan Azcarate      | Jone Jones                       |
+| Jacobo Kox         | Keyly Kox                        |
+| Pablo Motos        | Jone Jones                       |
++--------------------+----------------------------------+
+4 rows in set (0,00 sec)
 ```
 
++ ## Consultas Resumen
+
+```SQL
+-- 1. ¿Cuántos empleados hay en la compañía?
+
+SELECT COUNT(codigo_empleado) AS Empleados
+FROM empleado;
+```
+```
++-----------+
+| Empleados |
++-----------+
+|         8 |
++-----------+
+1 row in set (0,00 sec)
+```
+```SQL
+-- 2. ¿Cuántos clientes tiene cada país?
+
+SELECT COUNT(C.codigo_cliente) AS NumClientes, P.nombre AS Pais
+FROM pais P 
+INNER JOIN ciudad CD ON P.idPais = CD.idPais
+INNER JOIN cliente C ON CD.idCiudad = C.idCiudad
+GROUP BY P.idPais;
+```
+```
++-------------+---------------+
+| NumClientes | Pais          |
++-------------+---------------+
+|           3 | United States |
+|           9 | España        |
++-------------+---------------+
+2 rows in set (0,00 sec)
+```
+```SQL
+-- 3. ¿Cuál fue el pago medio en 2009?
+
+SELECT AVG(total) AS MediaPago
+FROM pago WHERE fecha_pago LIKE '2009%';
+```
+```
++------------+
+| MediaPago  |
++------------+
+| 125.000000 |
++------------+
+1 row in set (0,00 sec)
+```
+```SQL
+-- 4. ¿Cuántos pedidos hay en cada estado? Ordena el resultado de forma
+-- descendente por el número de pedidos.
+
+SELECT COUNT(P.codigo_pedido) AS CantidadPedido, E.nombre
+FROM estado E 
+INNER JOIN pedido P ON E.id = P.idEstado
+GROUP BY E.id
+ORDER BY COUNT(P.codigo_pedido) DESC
+;
+```
+```
++----------------+-----------+
+| CantidadPedido | nombre    |
++----------------+-----------+
+|              6 | Entregado |
+|              4 | Rechazado |
++----------------+-----------+
+2 rows in set (0,00 sec)
+```
+```SQL
+-- 5. Calcula el precio de venta del producto más caro y más barato en una
+-- misma consulta.
+SELECT MIN(precio_venta) AS Barato, MAX(precio_venta) AS Caro
+FROM producto;
+```
+```
++--------+-------+
+| Barato | Caro  |
++--------+-------+
+|   0.50 | 15.00 |
++--------+-------+
+1 row in set (0,01 sec)
+```
+```SQL
+-- 6. Calcula el número de clientes que tiene la empresa.
+
+SELECT COUNT(codigo_cliente) AS NumClientes FROM cliente;
+```
+```
++-------------+
+| NumClientes |
++-------------+
+|          12 |
++-------------+
+1 row in set (0,01 sec)
+```
+```SQL
+-- 7. ¿Cuántos clientes existen con domicilio en la ciudad de Madrid?
+
+SELECT COUNT(C.codigo_cliente) AS NumClientes FROM cliente C
+INNER JOIN ciudad AS CD ON C.idCiudad = CD.idCiudad
+WHERE CD.nombre = "Madrid";
+```
+```
++-------------+
+| NumClientes |
++-------------+
+|           6 |
++-------------+
+1 row in set (0,00 sec)
+```
+```SQL
+-- 8. ¿Calcula cuántos clientes tiene cada una de las ciudades que empiezan
+-- por M?
+
+SELECT COUNT(C.codigo_cliente) AS NumClientes, CD.nombre
+FROM cliente C
+INNER JOIN ciudad AS CD ON C.idCiudad = CD.idCiudad
+WHERE CD.nombre LIKE "M%"
+GROUP BY CD.idCiudad;
+```
+```
++-------------+--------+
+| NumClientes | nombre |
++-------------+--------+
+|           6 | Madrid |
++-------------+--------+
+1 row in set (0,01 sec)
+```
+```SQL
+-- 9. Devuelve el nombre de los representantes de ventas y el número de clientes
+-- al que atiende cada uno.
+
+SELECT CONCAT(E.nombre,' ',E.apellido1) AS RepVenta, COUNT(C.codigo_cliente) AS NumClientes
+FROM cliente C
+INNER JOIN empleado AS E ON C.codigo_empleado_rep_ventas = E.codigo_empleado
+GROUP BY E.codigo_empleado;
+```
+```
++------------------+-------------+
+| RepVenta         | NumClientes |
++------------------+-------------+
+| Samuel Ramirez   |           4 |
+| Keyly Kox        |           3 |
+| Keyly Valenzuela |           1 |
++------------------+-------------+
+3 rows in set (0,00 sec)
+```
+```SQL
+-- 10. Calcula el número de clientes que no tiene asignado representante de
+-- ventas.
+
+SELECT COUNT(codigo_cliente) AS NumClSinRep
+FROM cliente
+WHERE codigo_empleado_rep_ventas IS NULL;
+```
+```
++-------------+
+| NumClSinRep |
++-------------+
+|           4 |
++-------------+
+1 row in set (0,00 sec)
+```
+```SQL
+-- 11. Calcula la fecha del primer y último pago realizado por cada uno de los
+-- clientes. El listado deberá mostrar el nombre y los apellidos de cada cliente.
+
+
+SELECT MIN(P.fecha_pago) AS PrimerPago, MAX(P.fecha_pago) AS UltimoPago, C.nombre_cliente
+FROM pago P
+INNER JOIN cliente C ON P.codigo_cliente = C.codigo_cliente
+GROUP BY C.codigo_cliente
+;
+```
+```
++------------+------------+-------------------+
+| PrimerPago | UltimoPago | nombre_cliente    |
++------------+------------+-------------------+
+| 2008-01-01 | 2008-01-01 | Carlos Fernández  |
+| 2009-01-01 | 2009-01-01 | Ana Martínez      |
+| 2008-01-01 | 2008-01-01 | Manuel Torres     |
+| 2008-01-01 | 2008-01-01 | Carmen Ruiz       |
+| 2008-01-01 | 2008-01-01 | Marta Jiménez     |
++------------+------------+-------------------+
+5 rows in set (0,00 sec)
+```
+```SQL
+-- 12. Calcula el número de productos diferentes que hay en cada uno de los
+-- pedidos.
+SELECT COUNT(DISTINCT PR.codigo_producto) AS DifProductos, P.codigo_pedido
+FROM producto AS PR
+INNER JOIN detalle_pedido P ON PR.codigo_producto = P.codigo_producto
+GROUP BY P.codigo_pedido;
+```
+```
++--------------+---------------+
+| DifProductos | codigo_pedido |
++--------------+---------------+
+|            2 |             1 |
+|            3 |             2 |
+|            3 |             3 |
+|            3 |             4 |
+|            3 |             5 |
+|            3 |             6 |
+|            3 |             7 |
+|            3 |             8 |
+|            3 |             9 |
+|            1 |            10 |
++--------------+---------------+
+10 rows in set (0,00 sec)
+```
+```SQL
+-- 13. Calcula la suma de la cantidad total de todos los productos que aparecen en
+-- cada uno de los pedidos.
+SELECT SUM(cantidad) AS TotalProductosPeiddos
+FROM detalle_pedido;
+
+;
+```
+```
++-----------------------+
+| TotalProductosPeiddos |
++-----------------------+
+|                   147 |
++-----------------------+
+1 row in set (0,00 sec)
+```
+```SQL
+-- 14. Devuelve un listado de los 20 productos más vendidos y el número total de
+-- unidades que se han vendido de cada uno. El listado deberá estar ordenado
+-- por el número total de unidades vendidas.
+SELECT P.nombre, SUM(DP.cantidad) AS UnitVendidas
+FROM detalle_pedido DP
+INNER JOIN producto P ON DP.codigo_producto = P.codigo_producto
+GROUP BY P.codigo_producto
+ORDER BY UnitVendidas LIMIT 20
+;
+```
+```
++-------------------+--------------+
+| nombre            | UnitVendidas |
++-------------------+--------------+
+| Maceta Ornamental |           22 |
+| Manzana           |           45 |
+| Naranja           |           80 |
++-------------------+--------------+
+3 rows in set (0,00 sec)
+```
+```SQL
+-- 15. La facturación que ha tenido la empresa en toda la historia, indicando la
+-- base imponible, el IVA y el total facturado. La base imponible se calcula
+-- sumando el coste del producto por el número de unidades vendidas de la
+-- tabla detalle_pedido. El IVA es el 21 % de la base imponible, y el total la
+-- suma de los dos campos anteriores.
+
+SELECT 
+;
+```
+```
++-------------------+--------------+
+| nombre            | UnitVendidas |
++-------------------+--------------+
+| Maceta Ornamental |           22 |
+| Manzana           |           45 |
+| Naranja           |           80 |
++-------------------+--------------+
+3 rows in set (0,00 sec)
 ```
