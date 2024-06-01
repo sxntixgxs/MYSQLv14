@@ -1119,16 +1119,234 @@ ORDER BY UnitVendidas LIMIT 20
 -- tabla detalle_pedido. El IVA es el 21 % de la base imponible, y el total la
 -- suma de los dos campos anteriores.
 
-SELECT 
+SELECT
+ROUND(SUM(DP.cantidad * DP.precio_unidad), 2) AS BaseImponibleHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) * 21 / 100, 2) AS IVAHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) + SUM(DP.cantidad * DP.precio_unidad) * 21 / 100,2) AS TOTALHistorico
+FROM detalle_pedido DP
 ;
 ```
 ```
-+-------------------+--------------+
-| nombre            | UnitVendidas |
-+-------------------+--------------+
-| Maceta Ornamental |           22 |
-| Manzana           |           45 |
-| Naranja           |           80 |
-+-------------------+--------------+
++------------------------+--------------+----------------+
+| BaseImponibleHistorico | IVAHistorico | TOTALHistorico |
++------------------------+--------------+----------------+
+|                1332.50 |       279.83 |        1612.33 |
++------------------------+--------------+----------------+
+1 row in set (0,00 sec)
+```
+```SQL
+-- 16. La misma información que en la pregunta anterior, pero agrupada por
+-- código de producto.
+SELECT
+P.codigo_producto AS Producto,
+ROUND(SUM(DP.cantidad * DP.precio_unidad), 2) AS BaseImponibleHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) * 21 / 100, 2) AS IVAHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) + SUM(DP.cantidad * DP.precio_unidad) * 21 / 100,2) AS TOTALHistorico
+FROM detalle_pedido DP
+INNER JOIN producto P ON DP.codigo_producto  = P.codigo_producto
+GROUP BY P.codigo_producto;
+```
+```
++----------+------------------------+--------------+----------------+
+| Producto | BaseImponibleHistorico | IVAHistorico | TOTALHistorico |
++----------+------------------------+--------------+----------------+
+| P001     |                 660.00 |       138.60 |         798.60 |
+| P002     |                 112.50 |        23.63 |         136.13 |
+| P003     |                 560.00 |       117.60 |         677.60 |
++----------+------------------------+--------------+----------------+
 3 rows in set (0,00 sec)
+```
+
+```SQL
+-- 17. La misma información que en la pregunta anterior, pero agrupada por
+-- código de producto filtrada por los códigos que empiecen por OR.
+
+SELECT
+P.codigo_producto AS Producto,
+ROUND(SUM(DP.cantidad * DP.precio_unidad), 2) AS BaseImponibleHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) * 21 / 100, 2) AS IVAHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) + SUM(DP.cantidad * DP.precio_unidad) * 21 / 100,2) AS TOTALHistorico
+FROM detalle_pedido DP
+INNER JOIN producto P ON DP.codigo_producto  = P.codigo_producto
+GROUP BY P.codigo_producto
+HAVING P.codigo_producto LIKE 'Or%'; -- mis codigos de producto arrancan con P0, sin embargo esta es la estructura
+-- para obtener resultados lo podemos adaptar a que inicie con P0
+SELECT
+P.codigo_producto AS Producto,
+ROUND(SUM(DP.cantidad * DP.precio_unidad), 2) AS BaseImponibleHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) * 21 / 100, 2) AS IVAHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) + SUM(DP.cantidad * DP.precio_unidad) * 21 / 100,2) AS TOTALHistorico
+FROM detalle_pedido DP
+INNER JOIN producto P ON DP.codigo_producto  = P.codigo_producto
+GROUP BY P.codigo_producto
+HAVING P.codigo_producto LIKE 'P0%';
+```
+```
++----------+------------------------+--------------+----------------+
+| Producto | BaseImponibleHistorico | IVAHistorico | TOTALHistorico |
++----------+------------------------+--------------+----------------+
+| P001     |                 660.00 |       138.60 |         798.60 |
+| P002     |                 112.50 |        23.63 |         136.13 |
+| P003     |                 560.00 |       117.60 |         677.60 |
++----------+------------------------+--------------+----------------+
+3 rows in set (0,01 sec)
+```
+```SQL
+-- 18. Lista las ventas totales de los productos que hayan facturado más de 3000
+-- euros. Se mostrará el nombre, unidades vendidas, total facturado y total
+-- facturado con impuestos (21% IVA).
+
+SELECT
+P.codigo_producto AS Producto,
+ROUND(SUM(DP.cantidad * DP.precio_unidad), 2) AS BaseImponibleHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) * 21 / 100, 2) AS IVAHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) + SUM(DP.cantidad * DP.precio_unidad) * 21 / 100,2) AS TOTALHistorico
+FROM detalle_pedido DP
+INNER JOIN producto P ON DP.codigo_producto  = P.codigo_producto
+GROUP BY P.codigo_producto
+HAVING ROUND(SUM(DP.cantidad * DP.precio_unidad) + SUM(DP.cantidad * DP.precio_unidad) * 21 / 100,2) > 3000; -- en mis datos, ningun producto vendió más de 3K. Si cambiamos el numero a 300, para adaptarlo a la base de datos, este seria el resultado
+
+SELECT
+P.codigo_producto AS Producto,
+ROUND(SUM(DP.cantidad * DP.precio_unidad), 2) AS BaseImponibleHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) * 21 / 100, 2) AS IVAHistorico,
+ROUND(SUM(DP.cantidad * DP.precio_unidad) + SUM(DP.cantidad * DP.precio_unidad) * 21 / 100,2) AS TOTALHistorico
+FROM detalle_pedido DP
+INNER JOIN producto P ON DP.codigo_producto  = P.codigo_producto
+GROUP BY P.codigo_producto
+HAVING ROUND(SUM(DP.cantidad * DP.precio_unidad) + SUM(DP.cantidad * DP.precio_unidad) * 21 / 100,2) > 300; 
+
+```
+```
++----------+------------------------+--------------+----------------+
+| Producto | BaseImponibleHistorico | IVAHistorico | TOTALHistorico |
++----------+------------------------+--------------+----------------+
+| P001     |                 660.00 |       138.60 |         798.60 |
+| P003     |                 560.00 |       117.60 |         677.60 |
++----------+------------------------+--------------+----------------+
+2 rows in set (0,00 sec)
+```
+
+```SQL
+
+-- 19. Muestre la suma total de todos los pagos que se realizaron para cada uno
+-- de los años que aparecen en la tabla pagos.
+
+SELECT ROUND(SUM(total),2) AS TotalPagosxAño, YEAR(fecha_pago) AS Año
+FROM pago
+GROUP BY YEAR(fecha_pago);
+
+
+```
+```
++-----------------+------+
+| TotalPagosxAño  | Año  |
++-----------------+------+
+|          600.00 | 2008 |
+|          125.00 | 2009 |
++-----------------+------+
+2 rows in set (0,00 sec)
+```
++ ## Subconsultas
+```SQL
+
+-- 1. Devuelve el nombre del cliente con mayor límite de crédito.
+
+SELECT C.nombre_cliente
+FROM cliente C
+WHERE C.limite_credito =
+(SELECT MAX(limite_credito) FROM cliente); -- mis clientes no tienen limite de credito, por lo que no arroja resultados
+```
+```
+Empty set (0,00 sec)
+```
+
+```SQL
+
+-- 2. Devuelve el nombre del producto que tenga el precio de venta más caro.
+
+SELECT P.nombre
+FROM producto P
+WHERE P.precio_venta =
+(SELECT MAX(precio_venta) FROM producto); -- mis clientes no tienen limite de credito, por lo que no arroja resultados
+```
+```
++-------------------+
+| nombre            |
++-------------------+
+| Maceta Ornamental |
++-------------------+
+1 row in set (0,00 sec)
+```
+```SQL
+
+--3. Devuelve el nombre del producto del que se han vendido más unidades.
+--(Tenga en cuenta que tendrá que calcular cuál es el número total de
+-- unidades que se han vendido de cada producto a partir de los datos de la
+-- tabla detalle_pedido)
+
+SELECT P.nombre AS nombre_producto
+FROM producto P 
+INNER JOIN (
+    SELECT codigo_producto, SUM(cantidad) AS total_unidades_vendidas
+    FROM detalle_pedido
+    GROUP BY codigo_producto
+) AS UnitsVendidas ON UnitsVendidas.codigo_producto = P.codigo_producto
+WHERE UnitsVendidas.total_unidades_vendidas = (
+    SELECT MAX(total_unidades_vendidas)
+    FROM (
+        SELECT SUM(cantidad) AS total_unidades_vendidas
+        FROM detalle_pedido
+        GROUP BY codigo_producto
+    ) AS totales_unidades_vendidas
+);
+```
+```
++-----------------+
+| nombre_producto |
++-----------------+
+| Naranja         |
++-----------------+
+1 row in set (0,00 sec)
+```
+```SQL
+
+--4. Los clientes cuyo límite de crédito sea mayor que los pagos que haya
+-- realizado. (Sin utilizar INNER JOIN).
+SELECT nombre_cliente
+FROM cliente
+WHERE limite_credito >
+(SELECT S.TT
+FROM (SELECT SUM(total) AS TT
+FROM pago
+GROUP BY codigo_cliente) AS S
+)
+GROUP BY codigo_cliente;
+
+;
+
+```
+```
+Empty set (0,00 sec)
+```
+
+```SQL
+
+--5. Devuelve el producto que más unidades tiene en stock.
+
+SELECT nombre
+FROM producto
+WHERE cantidad_en_stock = (
+    SELECT MAX(cantidad_en_stock)
+    FROM producto
+);
+
+```
+```
++---------+
+| nombre  |
++---------+
+| Manzana |
++---------+
+1 row in set (0,00 sec)
 ```
